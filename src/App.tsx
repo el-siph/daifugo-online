@@ -4,11 +4,15 @@ import Card, { PlayerCount } from './models/Card';
 import CardComponent from './components/CardComponent';
 import { PlayerHand } from './models/Player';
 
+const ACE_IS_FOURTEEN = true;
+const TWO_IS_FIFTEEN = true;
+const DEFAULT_PLAYER_COUNT = 4;
+
 function App() {
 
   const [deck, setDeck] = useState<Card[]>([]);
   const [playerHands, setPlayerHands] = useState<PlayerHand[]>([]);
-  const [playerCount, setPlayerCount] = useState<PlayerCount>(2);
+  const [playerCount, setPlayerCount] = useState<PlayerCount>(DEFAULT_PLAYER_COUNT);
 
   useEffect(() => {
     prepareDeck();
@@ -21,7 +25,8 @@ function App() {
   const prepareDeck = () => {
     let deck = Card.generateTraditionalDeck();
     deck = Card.shuffleDeck(deck);
-    const playerHands: PlayerHand[] = Card.divideDeck(deck, playerCount);
+    let playerHands: PlayerHand[] = Card.divideDeck(deck, playerCount);
+    playerHands.forEach(hand => { hand.sortCards(ACE_IS_FOURTEEN, TWO_IS_FIFTEEN); })
     setPlayerHands(playerHands);
     setDeck(deck);
   }
@@ -49,6 +54,7 @@ function App() {
   return (
     <div className="App">
       <button onClick={() => shuffleDeck()}>Shuffle</button>
+      <button onClick={() => prepareDeck()}>Shuffle & Sort</button>
       <input type="number" min={1} max={7} value={playerCount} onChange={e => setPlayerCount(e.target.value as unknown as PlayerCount)} />
       {deckDisplay}
     </div>

@@ -48,6 +48,26 @@ class Card {
     }
 
     /**
+     * Sorts one or more Cards in pips order.
+     * @param cards two or more Cards that need to be placed in pips order, usually for individual players' hands
+     */
+    static sortCards(cards: Card[], aceIsFourteen: boolean=false, twoIsFifteen: boolean=false): Card[] {
+       let sortedCards: Card[];
+       let sortedRegular: Card[] = [];
+       let heldCards: Card[] = [];
+
+        sortedCards = cards.sort((c1, c2) => c1.pips - c2.pips);
+
+        sortedCards.forEach((card) => {
+            if (aceIsFourteen && card.pips === 1) { heldCards.push(card); } 
+            else if (twoIsFifteen && card.pips === 2) { heldCards.push(card); } 
+            else { sortedRegular.push(card); }
+        });
+
+        return [...sortedRegular, ...heldCards];
+    }
+
+    /**
      * @param deck a (pre-shuffled) deck of Cards
      * @param players number of total players
      * @returns an array of PlayerHands
