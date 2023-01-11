@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import './App.css';
-import Card, { PlayerCount } from './models/Card';
+import { PlayerCount } from './models/Card';
 import CardComponent from './components/CardComponent';
-import { PlayerHand } from './models/Player';
+import { Deck, PlayerDeck } from './models/Deck';
 
 const ACE_IS_FOURTEEN = true;
 const TWO_IS_FIFTEEN = true;
@@ -10,8 +10,8 @@ const DEFAULT_PLAYER_COUNT = 4;
 
 function App() {
 
-  const [deck, setDeck] = useState<Card[]>([]);
-  const [playerHands, setPlayerHands] = useState<PlayerHand[]>([]);
+  const [deck, setDeck] = useState<Deck>(new Deck([]));
+  const [playerDecks, setPlayerDecks] = useState<PlayerDeck[]>([]);
   const [playerCount, setPlayerCount] = useState<PlayerCount>(DEFAULT_PLAYER_COUNT);
 
   useEffect(() => {
@@ -23,26 +23,28 @@ function App() {
   }, [playerCount]);
 
   const prepareDeck = () => {
-    let deck = Card.generateTraditionalDeck();
-    deck = Card.shuffleDeck(deck);
-    let playerHands: PlayerHand[] = Card.divideDeck(deck, playerCount);
-    playerHands.forEach(hand => { hand.sortCards(ACE_IS_FOURTEEN, TWO_IS_FIFTEEN); })
-    setPlayerHands(playerHands);
+    const deck = Deck.generateTraditionalDeck();
+    deck.shuffleDeck();
+    let playerDecks: PlayerDeck[] = deck.divide(playerCount);
+    playerDecks.forEach(deck => { deck.sortCards(ACE_IS_FOURTEEN, TWO_IS_FIFTEEN); })
+    setPlayerDecks(playerDecks);
     setDeck(deck);
   }
 
-  const shuffleDeck = (): void => {
-    const newDeck = Card.shuffleDeck(deck);
-    const playerHands: PlayerHand[] = Card.divideDeck(newDeck, 4);
-    setDeck(newDeck);
-    setPlayerHands(playerHands);
+  const handleShuffleDeck = (): void => {
+    if (deck !== null) {
+      deck.shuffleDeck();
+      const playerDecks: PlayerDeck[] = deck.divide(4);
+      setDeck(deck);
+      setPlayerDecks(playerDecks);
+    }
   }
 
-  const deckDisplay = deck?.length < 1 ? <h1>One Moment...</h1> : <div className='card-containers'>
-    {playerHands.map((playerHand, i) => {
+  const deckDisplay = deck.getCardCount() < 1 ? <h1>One Moment...</h1> : <div className='card-containers'>
+    {playerDecks.map((playerDeck, i) => {
       return <div className='player-hand'>
-        <h1>Player {i+1}, {playerHand.cards.length} cards</h1>
-        { playerHand.cards.map(card => {
+        <h1>Player {i+1}, {playerDeck.getCardCount()} cards</h1>
+        { playerDeck.cards.map(card => {
           return <CardComponent key={`card-${card.suit}${card.pips}`} card={card} />
         })
       }
@@ -53,7 +55,7 @@ function App() {
 
   return (
     <div className="App">
-      <button onClick={() => shuffleDeck()}>Shuffle</button>
+      <button onClick={() => handleShuffleDeck()}>Shuffle</button>
       <button onClick={() => prepareDeck()}>Shuffle & Sort</button>
       <input type="number" min={1} max={7} value={playerCount} onChange={e => setPlayerCount(e.target.value as unknown as PlayerCount)} />
       {deckDisplay}

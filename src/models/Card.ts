@@ -1,5 +1,3 @@
-import { PlayerHand } from "./Player";
-
 export enum Suits {
     Clubs,
     Diamonds, 
@@ -10,78 +8,10 @@ export enum Suits {
 export type PlayerCount = 2 | 3 | 4 | 5 | 6 | 7;
 
 class Card {
+    private _imageURI: string;
 
-    /**
-     * Produces a standard French-suited deck of 52 cards, not including the Joker
-     * @returns a deck of Cards, in Suit/Pip order
-     */
-    static generateTraditionalDeck():Card[] {
-        const deck: Card[] = [];
-
-        [Suits.Clubs, Suits.Diamonds, Suits.Hearts, Suits.Spades].forEach((suit => {
-            for (let i=1; i<14; i++) {
-                const card = new Card(suit, i);
-                deck.push(card);
-            }
-        }));
-
-        return deck;
-    }
-
-
-    /**
-     * @param deck a generated deck of Cards
-     * @returns a randomly-sorted deck of the same Cards
-     */
-    static shuffleDeck(deck: Card[]): Card[] {
-        const shuffledDeck: Card[] = [];
-        const deckLength = deck.length;
-
-        for (let i=0; i<deckLength; i++) {
-            const rand = Math.floor(Math.random() * deck.length);
-            const nextCard: Card = deck.at(rand) as Card;
-            shuffledDeck.push(nextCard);
-            deck.splice(rand, 1);
-        }
-
-        return shuffledDeck;
-    }
-
-    /**
-     * Sorts one or more Cards in pips order.
-     * @param cards two or more Cards that need to be placed in pips order, usually for individual players' hands
-     */
-    static sortCards(cards: Card[], aceIsFourteen: boolean=false, twoIsFifteen: boolean=false): Card[] {
-       let sortedCards: Card[];
-       let sortedRegular: Card[] = [];
-       let heldCards: Card[] = [];
-
-        sortedCards = cards.sort((c1, c2) => c1.pips - c2.pips);
-
-        sortedCards.forEach((card) => {
-            if (aceIsFourteen && card.pips === 1) { heldCards.push(card); } 
-            else if (twoIsFifteen && card.pips === 2) { heldCards.push(card); } 
-            else { sortedRegular.push(card); }
-        });
-
-        return [...sortedRegular, ...heldCards];
-    }
-
-    /**
-     * @param deck a (pre-shuffled) deck of Cards
-     * @param players number of total players
-     * @returns an array of PlayerHands
-     */
-    static divideDeck(deck: Card[], players: PlayerCount): PlayerHand[] {
-        const playerHands: PlayerHand[] = [];
-        const cardsPerHand = Math.floor(deck.length/players);
-
-        for (let i=0; i<players; i++) {
-            const playerCards = deck.slice(cardsPerHand * i, cardsPerHand * (i+1) ) as Card[];
-            const playerHand = new PlayerHand(playerCards);
-            playerHands[i] = playerHand;
-        }
-        return playerHands;
+    constructor(private _suit: Suits, private _pips: number) {
+        this._imageURI = Card.getImageAsset(_suit, _pips);
     }
 
     static getImageAsset(suit: Suits, pip: number): string {
@@ -151,11 +81,6 @@ class Card {
         return "Undefined";
     }
 
-    private _imageURI: string;
-
-    constructor(private _suit: Suits, private _pips: number) {
-        this._imageURI = Card.getImageAsset(_suit, _pips);
-    }
     get pips() { return this._pips; }
     get suit() { return this._suit; }
     get imageURI() { return this._imageURI; }
