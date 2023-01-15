@@ -22,14 +22,30 @@ export class Deck {
 
         return new Deck(cards);
     }
-
-    addCard(newCard: Card) { 
-        this._cards.push(newCard); 
-    }
     
-    addCards(newCards: Card[]) { 
-        this._cards.concat([...newCards]);
+    addCards(newCards: Card | Card[]): void { 
+        if (newCards instanceof Card) {
+            this._cards.push(newCards); 
+        } else {
+            this._cards.concat([...newCards]);
+        }
     }
+
+    removeCards(cardsToRemove: Card | Card[]): void {
+        if (cardsToRemove instanceof Card) {
+            this._cards = this._cards.filter(c => c !== cardsToRemove);
+        } else {
+            cardsToRemove.forEach(card => {
+                this._cards = this._cards.filter(c => c !== card);
+            });
+        }
+    }
+
+    hasCard(card: Card): boolean {
+        return this._cards.includes(card);
+    }
+
+    get cards(): Card[] { return this._cards; }
 
     /**
      * @returns a randomly-sorted deck of the same Cards
@@ -108,27 +124,68 @@ export class PileDeck extends Deck {
         }
     }
 
-    override addCard(newCard: Card) { 
-        this._cards.push(newCard); 
-        this._topCardQuantity = 1;
+    override addCards(newCards: Card | Card[]) { 
+        if (newCards instanceof Card) {
+            this._cards.push(newCards);
+            this._topCard = newCards; 
+            this._topCardQuantity = 1;
+        } else {
+            this._cards.concat([...newCards]);
+            this._topCard = newCards[newCards.length-1];
+            this._topCardQuantity = newCards.length;
+        }
+        
     }
-    override addCards(newCards: Card[]) { 
-        this._cards.concat([...newCards]);
-        this._topCardQuantity = newCards.length;
-    }
+
 }
 
 /**
  * A Deck that each Player holds in their Hand
  */
 export class PlayerDeck extends Deck {
+    private _selectedCards: Card[] = [];
+
     constructor(private _playerID: number, protected _cards: Card[]) {
         super(_cards);
     }
 
     get playerID() { return this._playerID; }
 
-    get cards(): Card[] { return this._cards; }
+    addSelectedCards(cards: Card | Card[]): void {
+        if (cards instanceof Card) {
+            if (!this._selectedCards.includes(cards)) { this._selectedCards.push(cards); }
+        } else {
+            let cardsToSelect: Card[] = cards.filter(c => !this._selectedCards.includes(c))
+            this._selectedCards.concat([...cardsToSelect]);
+        }
+    }
+
+    removeSelectedCards(cards: Card | Card[]): void {
+        if (cards instanceof Card) {
+            this._selectedCards = this._selectedCards.filter(c => c !== cards);
+        } else {
+            this._selectedCards = this._selectedCards.filter(c => !cards.includes(c));
+        }
+    }
+
+    getSelectedCards(): Card[] {
+        return this._selectedCards;
+    }
+
+    getLastSelectedCard(): Card {
+        return this._selectedCards[this._selectedCards.length-1];
+    }
+
+    hasSelectedCard(card: Card): boolean {
+        return this._selectedCards.includes(card);
+    } 
+
+    takeSelectedCards(): Card[] {
+        const takenCards = this._selectedCards;
+        this._cards = this._cards.filter(c => !takenCards.includes(c));
+        this._selectedCards = [];
+        return takenCards;
+    }
 
     takeCardAt(index: number): Card {
         const card: Card = this._cards.at(index) as Card;
