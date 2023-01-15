@@ -1,6 +1,5 @@
 import Card, { PlayerCount, Suits } from "./Card";
 
-
 export class Deck {
     constructor(protected _cards: Card[]) {};
     getCardCount(): number { return this._cards.length; }   
@@ -22,6 +21,14 @@ export class Deck {
         }));
 
         return new Deck(cards);
+    }
+
+    addCard(newCard: Card) { 
+        this._cards.push(newCard); 
+    }
+    
+    addCards(newCards: Card[]) { 
+        this._cards.concat([...newCards]);
     }
 
     /**
@@ -68,15 +75,15 @@ export class Deck {
      * @returns an array of PlayerHands
      */
     divide(players: PlayerCount): PlayerDeck[] {
-        const playerHands: PlayerDeck[] = [];
+        const playerDecks: PlayerDeck[] = [];
         const cardsPerHand = Math.floor(this._cards.length/players);
 
         for (let i=0; i<players; i++) {
             const playerCards = this._cards.slice(cardsPerHand * i, cardsPerHand * (i+1) ) as Card[];
-            const playerHand = new PlayerDeck(`ID:${i}`, playerCards);
-            playerHands[i] = playerHand;
+            const playerHand = new PlayerDeck(i+1, playerCards);
+            playerDecks[i] = playerHand;
         }
-        return playerHands;
+        return playerDecks;
     }
 }
 
@@ -87,8 +94,8 @@ export class PileDeck extends Deck {
     private _topCard?: Card;
     private _topCardQuantity?: number;
 
-    constructor() { 
-        super([]); 
+    constructor(cards: Card[]=[]) { 
+        super(cards); 
         this._topCardQuantity = 0;
     }
 
@@ -100,11 +107,12 @@ export class PileDeck extends Deck {
             return undefined;
         }
     }
-    addCard(newCard: Card) { 
+
+    override addCard(newCard: Card) { 
         this._cards.push(newCard); 
         this._topCardQuantity = 1;
     }
-    addCards(newCards: Card[]) { 
+    override addCards(newCards: Card[]) { 
         this._cards.concat([...newCards]);
         this._topCardQuantity = newCards.length;
     }
@@ -114,9 +122,11 @@ export class PileDeck extends Deck {
  * A Deck that each Player holds in their Hand
  */
 export class PlayerDeck extends Deck {
-    constructor(private _playerID: string, protected _cards: Card[]) {
+    constructor(private _playerID: number, protected _cards: Card[]) {
         super(_cards);
     }
+
+    get playerID() { return this._playerID; }
 
     get cards(): Card[] { return this._cards; }
 
