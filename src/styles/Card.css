@@ -1,6 +1,23 @@
 .card-containers {}
 
-.card-container {}
+.card-container {
+    cursor: pointer;
+}
+
+.card-container.selected > img {
+    box-shadow: 1px 1px 10px rgb(140, 102, 194);
+}
+
+.card-container.disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+
+}
+
+.selected-cards-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
+}
 
 .player-hand {
     display: grid;
