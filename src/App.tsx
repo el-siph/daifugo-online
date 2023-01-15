@@ -44,13 +44,9 @@ function App() {
     }
   }
 
-
-  const currentPlayerDeck = () => { return playerDecks[currentPlayerID]; };
-  
-
   const handleCardSelection = (card: Card) => {
     const newPlayerDecks = [...playerDecks];
-    const updatedDeck = currentPlayerDeck();
+    const updatedDeck = playerDecks[currentPlayerID-1];
     
     if (updatedDeck.hasSelectedCard(card)) {
       updatedDeck.removeSelectedCards(card);
@@ -69,12 +65,13 @@ function App() {
       return <div className='player-hand'>
         <h1>Player {i+1}, {playerDeck.getCardCount()} cards</h1>
         { playerDeck.playerID === currentPlayerID && playerDeck.cards.map(card => {
+          const playerDeck = playerDecks[currentPlayerID-1];
           return <CardComponent 
             key={`card-${card.suit}${card.pips}`} 
             card={card} 
             handleClick={() => handleCardSelection(card)} 
-            isSelected={currentPlayerDeck().hasSelectedCard(card)} 
-            isSelectable={currentPlayerDeck().getSelectedCards().length < 1 || currentPlayerDeck().getLastSelectedCard().pips === card.pips}
+            isSelected={playerDeck.hasSelectedCard(card)} 
+            isSelectable={playerDeck.getSelectedCards().length < 1 || playerDeck.getLastSelectedCard().pips === card.pips}
             />
         })
       }
