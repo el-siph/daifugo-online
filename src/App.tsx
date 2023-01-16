@@ -99,23 +99,48 @@ function App() {
   const isCardSelectable = (card: Card): boolean => {
     const playerDeck = playerDecks[currentPlayerID-1];
 
+    // Heurstic filters
+
+    // if: current PileDeck hasn't been started: then: Card is always enabled
+    if (currentPile.getCardCount() < 1 && playerDeck.getSelectedCards().length < 1) {
+      return true;
+    }
+
+    // if: top card Pips is higher than Card, then: Card is never enabled
+    if (currentPile.peekTopPips() >= card.getPips()) {
+      return false;
+    }
+
+    // if: top quantity is active, then: all Card groups lower than the quantity are never enabled
+    if (currentPile.peekTopQuantity() > 1) {
+      const availableMultiples = playerDeck.getMultiples(currentPile.peekTopQuantity(), true);
+      if (!availableMultiples.includes(card)) {
+        return false;
+      }
+    }
+
+    // if: Card was already selected, then: Card will always be de-selectable
+    if (playerDeck.hasSelectedCard(card)) {
+      return true;
+    }
+
+    // END Heurstic filters
+
     // if: Player has no selected Cards
     if (playerDeck.getSelectedCards().length < 1) {
       
       // if: top Card quantity is one, then: just compare Pips
-      if (currentPile.peekTopQuantity() < 2 && currentPile.peekTopPips() < card.getPips()) {
-        return true;
-      // else: only allow cards that also have the same quantity available
-      } else {
-        const availableMultiples = playerDeck.getMultiples(currentPile.peekTopQuantity(), true);
-        return (availableMultiples.includes(card) && currentPile.peekTopPips() < card.getPips());
-      }
+      return currentPile.peekTopPips() < card.getPips();
       
-    // else if: Player has selected a Card; then: return whether the Card has an equal number of Pips
-    } else if (playerDeck.getSelectedCards().length > 0) {
-      return playerDeck.getLastSelectedCard()?.getPips() === card.getPips();
-    } else  {
-      return false;
+    // else if: Player has selected one or more Cards
+    } else {
+      // if: current PileDeck hasn't been started, then: return whether the Card has an equal number of Pips
+      if (currentPile.getCardCount() < 1) {
+        return playerDeck.getLastSelectedCard()?.getPips() === card.getPips();
+      // else: return whether the quantity quota has been met and the Card has the same Pips as the other selections
+      } else {
+        return playerDeck.getSelectedCards().length < currentPile.peekTopQuantity() && playerDeck.getLastSelectedCard().getPips() === card.getPips();
+      }
     }
   }
 
@@ -158,7 +183,7 @@ function App() {
       <section className='debug-actions'>
         <button onClick={() => handleShuffleDeck()}>Shuffle</button>
         <button onClick={() => prepareDeck()}>Shuffle & Sort</button>
-        <button onClick={() => handleTossSelectedIntoPile()} disabled={currentPlayerDeck?.getSelectedCards().length < 1}>Toss Selected</button>
+        <button onClick={() => handleTossSelectedIntoPile()} disabled={currentPlayerDeck?.getSelectedCards().length < currentPile.peekTopQuantity()}>Toss Selected</button>
         <button onClick={() => handlePass()} disabled={currentPlayerDeck?.getSelectedCards().length > 0}>Pass</button>
         <label># of Players<input type="number" min={1} max={7} value={playerCount} onChange={e => setPlayerCount(e.target.value as unknown as PlayerCount)} /></label>
         <label>Current Player<input type="number" min={1} max={playerCount} value={currentPlayerID} onChange={e => setCurrentPlayerID(parseInt(e.target.value))} /></label>
