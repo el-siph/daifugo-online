@@ -7,3 +7,37 @@
   align-items: center;
   justify-content: center;
 }
+
+.debug-actions {
+  align-items: center;
+  background-color: #fff;
+  border-top: 2px solid #eee;
+  bottom: 0;
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  padding: 2rem 0;
+  position: fixed;
+  width: 100%;
+  z-index: 9999;
+}
+
+.player-actions {
+  background-color: #fff;
+  border-bottom: 2px solid #eee;
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  padding: 2rem 0;
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 9999;
+}
+
+.play-area {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin-top: 10rem;
+}

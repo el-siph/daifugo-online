@@ -144,12 +144,12 @@ function App() {
     }
   }
 
+  const currentPlayerDeck = playerDecks[currentPlayerID-1];
+
   // Render Components
   const deckDisplay = deck.getCardCount() < 1 ? <h1>One Moment...</h1> : <div className='card-containers'>
-    { playerDecks.map((playerDeck, i) => {
-      return <div className='player-hand'>
-        <h1>Player {i+1}, {playerDeck.getCardCount()} cards</h1>
-        { playerDeck.playerID === currentPlayerID && playerDeck.cards.map(card => {
+      <div className='player-hand'>
+        { currentPlayerDeck.playerID === currentPlayerID && currentPlayerDeck.cards.map(card => {
           const playerDeck = playerDecks[currentPlayerID-1];
           return <CardComponent 
             key={`card-${card.suit}${card.getPips()}`} 
@@ -161,7 +161,6 @@ function App() {
         })
       }
       </div>
-    })}
     </div>
 
     const pileDisplay = currentPile?.getCardCount() < 1 ? <h2>Pile Empty</h2> : <div className='card-pile'>
@@ -169,29 +168,33 @@ function App() {
         return <CardComponent 
         key={`card-${card.suit}${card.getPips()}`} 
         card={card} 
-        handleClick={() => handleCardSelection(card)} 
+        handleClick={() => {}} 
         isSelected={false} 
-        isSelectable={false}
+        isSelectable={true}
         />
       }) }
     </div>
 
-      const currentPlayerDeck = playerDecks[currentPlayerID-1];
-
   return (
     <div className="App">
+      
+      <section className='player-actions'>
+        <button onClick={() => handleTossSelectedIntoPile()} disabled={currentPlayerDeck?.getSelectedCards().length < currentPile.peekTopQuantity()}>Toss Selected</button>
+        <button onClick={() => handlePass()} disabled={currentPlayerDeck?.getSelectedCards().length > 0}>Pass</button>
+      </section>
+
       <section className='debug-actions'>
         <button onClick={() => handleShuffleDeck()}>Shuffle</button>
         <button onClick={() => prepareDeck()}>Shuffle & Sort</button>
-        <button onClick={() => handleTossSelectedIntoPile()} disabled={currentPlayerDeck?.getSelectedCards().length < currentPile.peekTopQuantity()}>Toss Selected</button>
-        <button onClick={() => handlePass()} disabled={currentPlayerDeck?.getSelectedCards().length > 0}>Pass</button>
         <label># of Players<input type="number" min={1} max={7} value={playerCount} onChange={e => setPlayerCount(e.target.value as unknown as PlayerCount)} /></label>
         <label>Current Player<input type="number" min={1} max={playerCount} value={currentPlayerID} onChange={e => setCurrentPlayerID(parseInt(e.target.value))} /></label>
       </section>
 
-      {pileDisplay}
-
-      {deckDisplay}
+      <section className='play-area'>
+        {pileDisplay}
+        <h1>Player {currentPlayerDeck.playerID}, {currentPlayerDeck.getCardCount()} cards</h1>
+        {deckDisplay}
+      </section>
 
     </div>
   );

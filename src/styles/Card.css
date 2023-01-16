@@ -1,7 +1,14 @@
-.card-containers {}
-
 .card-container {
     cursor: pointer;
+    transition: opacity .1s linear;
+}
+
+.card-pile {
+    background-color: rgba(2, 97, 65, 0.657);
+    display: flex;
+    justify-content: center;
+    padding: 2rem;
+    margin-bottom: 2rem;
 }
 
 .card-container.selected > img {
@@ -12,7 +19,6 @@
     cursor: not-allowed;
     opacity: 0.2;
     pointer-events: none;
-
 }
 
 .selected-cards-container {
