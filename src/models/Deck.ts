@@ -231,29 +231,29 @@ export class PlayerDeck extends Deck {
         return takenCards;
     }
 
-    takeCardAt(index: number): Card {
-        const card: Card = this._cards.at(index) as Card;
-        this._cards.splice(index, 1);
-        return card;
-    }
-
-    takeCardsAt(indecies: number[]): Card[] {
-        const takenCards: Card[] = [];
-        indecies.forEach(index => {
-            takenCards.push(this.takeCardAt(index));
-        });
-
-        return takenCards;
+    takeCardsAt(indecies: number | number[]): Card | Card[] {
+        if (typeof indecies === 'number') {
+            const card: Card = this._cards.at(indecies) as Card;
+            this._cards.splice(indecies, 1);
+            return card;
+        } else {
+            const takenCards: Card[] = [];
+            indecies.forEach(index => {
+                takenCards.push(this.takeCardsAt(index) as Card);
+            });
+    
+            return takenCards;
+        }
     }
 
     // assumes Deck is sorted
     takeBestCard(): Card { 
-        const bestCard: Card = this.takeCardAt(this._cards.length-1)
+        const bestCard: Card = this.takeCardsAt(this._cards.length-1) as Card;
         return bestCard;
     }
 
     takeWorstCard(): Card {
-        const worstCard: Card = this.takeCardAt(0);
+        const worstCard: Card = this.takeCardsAt(0) as Card;
         return worstCard;
     }
 }
