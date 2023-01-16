@@ -15,6 +15,7 @@ function App() {
   const [playerCount, setPlayerCount] = useState<PlayerCount>(DEFAULT_PLAYER_COUNT);
   const [currentPlayerID, setCurrentPlayerID] = useState<number>(-1);
   const [currentPile, setCurrentPile] = useState<PileDeck>(new PileDeck());
+  const [passCount, setPassCount] = useState<number>(0);
 
   useEffect(() => {
     prepareDeck();
@@ -71,6 +72,28 @@ function App() {
       setCurrentPile(newPile);
     }
     updateCurrentPlayerDeck(playerDeck);
+    advancePlayer();
+  }
+
+  const advancePlayer = (): void => {
+    let newPlayerId = currentPlayerID + 1;
+    if (newPlayerId > playerCount) { newPlayerId = 1; }
+    setCurrentPlayerID(newPlayerId);
+  }
+
+  const handlePass = (): void => {
+    advancePlayer();
+    let newPassCount = passCount + 1;
+    if (newPassCount === playerCount-1) {
+      refreshPile();
+      newPassCount = 0;
+    }
+    setPassCount(newPassCount);
+  }
+
+  const refreshPile = (): void => {
+    const newPile = new PileDeck([]);
+    setCurrentPile(newPile);
   }
 
   const isCardSelectable = (card: Card): boolean => {
@@ -128,13 +151,15 @@ function App() {
       }) }
     </div>
 
+      const currentPlayerDeck = playerDecks[currentPlayerID-1];
 
   return (
     <div className="App">
       <section className='debug-actions'>
         <button onClick={() => handleShuffleDeck()}>Shuffle</button>
         <button onClick={() => prepareDeck()}>Shuffle & Sort</button>
-        <button onClick={() => handleTossSelectedIntoPile()} disabled={playerDecks[currentPlayerID-1]?.getSelectedCards().length < 1}>Toss Selected</button>
+        <button onClick={() => handleTossSelectedIntoPile()} disabled={currentPlayerDeck?.getSelectedCards().length < 1}>Toss Selected</button>
+        <button onClick={() => handlePass()} disabled={currentPlayerDeck?.getSelectedCards().length > 0}>Pass</button>
         <label># of Players<input type="number" min={1} max={7} value={playerCount} onChange={e => setPlayerCount(e.target.value as unknown as PlayerCount)} /></label>
         <label>Current Player<input type="number" min={1} max={playerCount} value={currentPlayerID} onChange={e => setCurrentPlayerID(parseInt(e.target.value))} /></label>
       </section>
