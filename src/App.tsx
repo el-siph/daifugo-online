@@ -197,7 +197,7 @@ function App() {
 
       <section className='play-area'>
         {pileDisplay}
-        <h1>Player {currentPlayerDeck.playerID}, {currentPlayerDeck.getCardCount()} cards</h1>
+        { currentPlayerDeck !== undefined && <h1>Player {currentPlayerDeck.playerID}, {currentPlayerDeck.getCardCount()} cards</h1> }
         {deckDisplay}
       </section>
 
