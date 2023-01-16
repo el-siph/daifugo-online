@@ -81,7 +81,12 @@ class Card {
         return "Undefined";
     }
 
-    get pips() { return this._pips; }
+    getPips(aceIsFourteen: boolean=false, twoIsFifteen: boolean=false) { 
+        if (this._pips === 1 && aceIsFourteen) { return 14; }
+        else if (this._pips === 2 && twoIsFifteen) { return 15; }
+        else { return this._pips; }
+    }
+
     get suit() { return this._suit; }
     get imageURI() { return this._imageURI; }
 }

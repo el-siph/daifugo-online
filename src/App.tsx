@@ -35,6 +35,12 @@ function App() {
     setDeck(deck);
   }
 
+  const updateCurrentPlayerDeck = (updatedDeck: PlayerDeck): void => {
+    const newPlayerDecks = [...playerDecks];
+    newPlayerDecks[currentPlayerID-1] = updatedDeck;
+    setPlayerDecks(newPlayerDecks);
+  } 
+
   const handleShuffleDeck = (): void => {
     if (deck !== null) {
       deck.shuffleDeck();
@@ -45,7 +51,6 @@ function App() {
   }
 
   const handleCardSelection = (card: Card) => {
-    const newPlayerDecks = [...playerDecks];
     const updatedDeck = playerDecks[currentPlayerID-1];
     
     if (updatedDeck.hasSelectedCard(card)) {
@@ -54,9 +59,32 @@ function App() {
       updatedDeck.addSelectedCards(card);
     }
 
-    newPlayerDecks[currentPlayerID] = updatedDeck;
-    setPlayerDecks(newPlayerDecks);
+    updateCurrentPlayerDeck(updatedDeck);
+  }
 
+  const handleTossSelectedIntoPile = (): void => {
+    const newPile = new PileDeck(currentPile.cards);
+    const playerDeck = playerDecks[currentPlayerID-1];
+    const selectedCards = playerDeck.takeSelectedCards();
+    console.log("selectedCards", selectedCards);
+    if (selectedCards.length > 0) {
+      newPile.addCards(selectedCards);
+      setCurrentPile(newPile);
+    }
+    updateCurrentPlayerDeck(playerDeck);
+
+    console.log("New Pile", newPile);
+  }
+
+  const isCardSelectable = (card: Card): boolean => {
+    const playerDeck = playerDecks[currentPlayerID-1];
+    // if: Player has no selected Cards, then: return whether the Card has more Pips than top Card on Pile (0 if no Card in Pile)
+    if (playerDeck.getSelectedCards().length < 1 && (currentPile.peekTopPips() < card.getPips())) {
+      return true;
+    // else if: Player has selected a Card; then: return whether the Card has an equal number of Pips
+    } else {
+      return playerDeck.getLastSelectedCard()?.getPips() === card.getPips()
+    }
   }
 
   // Render Components
@@ -67,11 +95,11 @@ function App() {
         { playerDeck.playerID === currentPlayerID && playerDeck.cards.map(card => {
           const playerDeck = playerDecks[currentPlayerID-1];
           return <CardComponent 
-            key={`card-${card.suit}${card.pips}`} 
+            key={`card-${card.suit}${card.getPips()}`} 
             card={card} 
             handleClick={() => handleCardSelection(card)} 
             isSelected={playerDeck.hasSelectedCard(card)} 
-            isSelectable={playerDeck.getSelectedCards().length < 1 || playerDeck.getLastSelectedCard().pips === card.pips}
+            isSelectable={isCardSelectable(card)}
             />
         })
       }
@@ -79,14 +107,30 @@ function App() {
     })}
     </div>
 
+    const pileDisplay = currentPile?.getCardCount() < 1 ? <h2>Pile Empty</h2> : <div className='card-pile'>
+      { currentPile.peekTopCards().map(card => {
+        return <CardComponent 
+        key={`card-${card.suit}${card.getPips()}`} 
+        card={card} 
+        handleClick={() => handleCardSelection(card)} 
+        isSelected={false} 
+        isSelectable={false}
+        />
+      }) }
+    </div>
+
+
   return (
     <div className="App">
       <section className='debug-actions'>
         <button onClick={() => handleShuffleDeck()}>Shuffle</button>
         <button onClick={() => prepareDeck()}>Shuffle & Sort</button>
+        <button onClick={() => handleTossSelectedIntoPile()} disabled={playerDecks[currentPlayerID-1]?.getSelectedCards().length < 1}>Toss Selected</button>
         <label># of Players<input type="number" min={1} max={7} value={playerCount} onChange={e => setPlayerCount(e.target.value as unknown as PlayerCount)} /></label>
         <label>Current Player<input type="number" min={1} max={playerCount} value={currentPlayerID} onChange={e => setCurrentPlayerID(parseInt(e.target.value))} /></label>
       </section>
+
+      {pileDisplay}
 
       {deckDisplay}
 

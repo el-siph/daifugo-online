@@ -73,11 +73,11 @@ export class Deck {
        let sortedRegular: Card[] = [];
        let heldCards: Card[] = [];
 
-        sortedCards = this._cards.sort((c1, c2) => c1.pips - c2.pips);
+        sortedCards = this._cards.sort((c1, c2) => c1.getPips() - c2.getPips());
 
         sortedCards.forEach((card) => {
-            if (aceIsFourteen && card.pips === 1) { heldCards.push(card); } 
-            else if (twoIsFifteen && card.pips === 2) { heldCards.push(card); } 
+            if (aceIsFourteen && card.getPips() === 1) { heldCards.push(card); } 
+            else if (twoIsFifteen && card.getPips() === 2) { heldCards.push(card); } 
             else { sortedRegular.push(card); }
         });
 
@@ -131,6 +131,14 @@ export class PileDeck extends Deck {
         } else {
             return undefined;
         }
+    }
+
+    /**
+     * @returns number of Pips for the Top Card (0, if Pile is empty)
+     */
+    peekTopPips(): number {
+        if (this._topCard) { return this._topCard.getPips(); }
+        return 0;
     }
 
     override addCards(newCards: Card | Card[]) { 
