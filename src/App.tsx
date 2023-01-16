@@ -17,6 +17,9 @@ function App() {
   const [currentPlayerID, setCurrentPlayerID] = useState<number>(-1);
   const [currentPile, setCurrentPile] = useState<PileDeck>(new PileDeck());
   const [passCount, setPassCount] = useState<number>(0);
+  const [victoryOrder, setVictoryOrder] = useState<number[]>([]);
+  const [playersRemaining, setPlayersRemaining] = useState<number[]>([]);
+  const [isRoundEnded, setIsRoundEnded] = useState<boolean>(false);
 
   useEffect(() => {
     prepareDeck();
@@ -31,10 +34,19 @@ function App() {
   const prepareDeck = () => {
     const deck = Deck.generateTraditionalDeck(ACE_IS_FOURTEEN, TWO_IS_FIFTEEN);
     deck.shuffleDeck();
-    let playerDecks: PlayerDeck[] = deck.divide(playerCount);
-    playerDecks.forEach(deck => { deck.sortCards(ACE_IS_FOURTEEN, TWO_IS_FIFTEEN); })
-    setPlayerDecks(playerDecks);
+    setupPlayers(deck);
     setDeck(deck);
+  }
+
+  const setupPlayers = (deck: Deck): void => {
+    let playerDecks: PlayerDeck[] = deck.divide(playerCount);
+    const newPlayersRemaining: number[] = [];
+    playerDecks.forEach(deck => { 
+      deck.sortCards(ACE_IS_FOURTEEN, TWO_IS_FIFTEEN); 
+      newPlayersRemaining.push(deck.playerID);
+    });
+    setPlayerDecks(playerDecks);
+    setPlayersRemaining(newPlayersRemaining);
   }
 
   const updateCurrentPlayerDeck = (updatedDeck: PlayerDeck): void => {
@@ -69,9 +81,15 @@ function App() {
     const playerDeck = playerDecks[currentPlayerID-1];
     const selectedCards = playerDeck.takeSelectedCards();
     
+    // if: Player is adding one or more Cards, then: check for conditions before advancing to next Player
     if (selectedCards.length > 0) {
       newPile.addCards(selectedCards);
       if (selectedCards[0].getPips() === TERMINATE_PILE_PIPS) { newPile.clearPile(); } 
+      // if: Player's deck is exhausted, then: add ID to winner stack
+      if (playerDeck.getCardCount() < 1) { 
+        addVictor(playerDeck.playerID); 
+        advancePlayer();
+      }
       else { advancePlayer(); }
       setCurrentPile(newPile);
     }
@@ -80,16 +98,35 @@ function App() {
     setPassCount(0);
   }
 
+  const addVictor = (playerID: number): void => {
+      const newVictoryOrder = [...victoryOrder];
+      newVictoryOrder.push(playerID);
+
+      const newPlayersRemaining: number[] = [...playersRemaining].filter(p => p !== playerID);
+
+      // if: the n+1 Player has won, then: add the nth Player to the bottom of victoryOrder and end the round
+      if (newVictoryOrder.length === playerCount-1) {
+        newVictoryOrder.push(newPlayersRemaining[0]);
+        setVictoryOrder(newVictoryOrder); 
+        setPlayersRemaining([]);
+        setIsRoundEnded(true);
+      } else { 
+        setVictoryOrder(newVictoryOrder); 
+        setPlayersRemaining(newPlayersRemaining);
+      }
+  }
+
   const advancePlayer = (): void => {
     let newPlayerId = currentPlayerID + 1;
     if (newPlayerId > playerCount) { newPlayerId = 1; }
+    while (!playersRemaining.includes(newPlayerId)) { ++newPlayerId; }
     setCurrentPlayerID(newPlayerId);
   }
 
   const handlePass = (): void => {
     advancePlayer();
     let newPassCount = passCount + 1;
-    if (newPassCount === playerCount-1) {
+    if (newPassCount === playersRemaining.length-1) {
       refreshPile();
       newPassCount = 0;
     }
@@ -131,12 +168,9 @@ function App() {
 
     // END Heurstic filters
 
-    // if: Player has no selected Cards
+    // if: Player has no selected Cards, then: just compare Pips
     if (playerDeck.getSelectedCards().length < 1) {
-      
-      // if: top Card quantity is one, then: just compare Pips
       return currentPile.peekTopPips() < card.getPips();
-      
     // else if: Player has selected one or more Cards
     } else {
       // if: current PileDeck hasn't been started, then: return whether the Card has an equal number of Pips
@@ -152,7 +186,7 @@ function App() {
   const currentPlayerDeck = playerDecks[currentPlayerID-1];
 
   // Render Components
-  const deckDisplay = deck.getCardCount() < 1 ? <h1>One Moment...</h1> : <div className='card-containers'>
+  const deckDisplay = (!currentPlayerDeck || deck.getCardCount() < 1) ? <h1>One Moment...</h1> : <div className='card-containers'>
       <div className='player-hand'>
         { currentPlayerDeck.playerID === currentPlayerID && currentPlayerDeck.cards.map(card => {
           const playerDeck = playerDecks[currentPlayerID-1];
@@ -185,7 +219,7 @@ function App() {
       
       <section className='player-actions'>
         <button onClick={() => handleTossSelectedIntoPile()} disabled={currentPlayerDeck?.getSelectedCards().length < currentPile.peekTopQuantity()}>Toss Selected</button>
-        <button onClick={() => handlePass()} disabled={currentPlayerDeck?.getSelectedCards().length > 0}>Pass</button>
+        <button onClick={() => handlePass()} disabled={currentPlayerDeck?.getSelectedCards().length > 0 || victoryOrder.length === playerCount}>Pass</button>
       </section>
 
       <section className='debug-actions'>
@@ -195,11 +229,35 @@ function App() {
         <label>Current Player<input type="number" min={1} max={playerCount} value={currentPlayerID} onChange={e => setCurrentPlayerID(parseInt(e.target.value))} /></label>
       </section>
 
-      <section className='play-area'>
+      { !isRoundEnded && <section className='play-area'>
         {pileDisplay}
         { currentPlayerDeck !== undefined && <h1>Player {currentPlayerDeck.playerID}, {currentPlayerDeck.getCardCount()} cards</h1> }
         {deckDisplay}
-      </section>
+
+        <h2>Standings</h2>
+        <ol>
+          { victoryOrder.map((victor, i) => {
+            return <li>Player #{victor} {i < 2 ? `+${2-i} points` : ''}</li>
+          }) }
+        </ol>
+
+        <h2>Players Remaining</h2>
+        <ol>
+          { playersRemaining.map((remaining, i) => {
+            return <li>Player #{remaining}</li>
+          }) }
+        </ol>
+      </section> }
+    
+      { isRoundEnded && <section className='round-over-container'>
+          <h1>Round Over!</h1>
+          <h2>Results</h2>
+          <ol>
+          { victoryOrder.map((victor, i) => {
+            return <li>Player #{victor}{i < 2 ? ` | +${2-i} points` : ''}</li>
+          }) }
+          </ol> 
+        </section> }
 
     </div>
   );
