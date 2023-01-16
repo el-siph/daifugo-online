@@ -27,7 +27,7 @@ function App() {
   }, [playerCount]);
 
   const prepareDeck = () => {
-    const deck = Deck.generateTraditionalDeck();
+    const deck = Deck.generateTraditionalDeck(ACE_IS_FOURTEEN, TWO_IS_FIFTEEN);
     deck.shuffleDeck();
     let playerDecks: PlayerDeck[] = deck.divide(playerCount);
     playerDecks.forEach(deck => { deck.sortCards(ACE_IS_FOURTEEN, TWO_IS_FIFTEEN); })
@@ -66,24 +66,33 @@ function App() {
     const newPile = new PileDeck(currentPile.cards);
     const playerDeck = playerDecks[currentPlayerID-1];
     const selectedCards = playerDeck.takeSelectedCards();
-    console.log("selectedCards", selectedCards);
     if (selectedCards.length > 0) {
       newPile.addCards(selectedCards);
       setCurrentPile(newPile);
     }
     updateCurrentPlayerDeck(playerDeck);
-
-    console.log("New Pile", newPile);
   }
 
   const isCardSelectable = (card: Card): boolean => {
     const playerDeck = playerDecks[currentPlayerID-1];
-    // if: Player has no selected Cards, then: return whether the Card has more Pips than top Card on Pile (0 if no Card in Pile)
-    if (playerDeck.getSelectedCards().length < 1 && (currentPile.peekTopPips() < card.getPips())) {
-      return true;
+
+    // if: Player has no selected Cards
+    if (playerDeck.getSelectedCards().length < 1) {
+      
+      // if: top Card quantity is one, then: just compare Pips
+      if (currentPile.peekTopQuantity() < 2 && currentPile.peekTopPips() < card.getPips()) {
+        return true;
+      // else: only allow cards that also have the same quantity available
+      } else {
+        const availableMultiples = playerDeck.getMultiples(currentPile.peekTopQuantity(), true);
+        return (availableMultiples.includes(card) && currentPile.peekTopPips() < card.getPips());
+      }
+      
     // else if: Player has selected a Card; then: return whether the Card has an equal number of Pips
-    } else {
-      return playerDeck.getLastSelectedCard()?.getPips() === card.getPips()
+    } else if (playerDeck.getSelectedCards().length > 0) {
+      return playerDeck.getLastSelectedCard()?.getPips() === card.getPips();
+    } else  {
+      return false;
     }
   }
 

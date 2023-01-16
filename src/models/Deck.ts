@@ -10,12 +10,12 @@ export class Deck {
      * @returns a deck of Cards, in Suit/Pip order
      * TODO: add support for Jokers
      */
-    static generateTraditionalDeck(): Deck {
+    static generateTraditionalDeck(aceIsFourteen: boolean=false, twoIsFifteen: boolean=false): Deck {
         const cards: Card[] = [];
 
         [Suits.Clubs, Suits.Diamonds, Suits.Hearts, Suits.Spades].forEach((suit => {
             for (let i=1; i<14; i++) {
-                const card = new Card(suit, i);
+                const card = new Card(suit, i, aceIsFourteen, twoIsFifteen);
                 cards.push(card);
             }
         }));
@@ -125,6 +125,10 @@ export class PileDeck extends Deck {
         return topCards;
     }
 
+    peekTopQuantity(): number {
+        return this._topCardQuantity;
+    }
+
     peekTopCardQuantityTuple(): [Card, number] | undefined { 
         if (this._topCard && this._topCardQuantity) {
             return [this._topCard, this._topCardQuantity];
@@ -183,6 +187,29 @@ export class PlayerDeck extends Deck {
         } else {
             this._selectedCards = this._selectedCards.filter(c => !cards.includes(c));
         }
+    }
+
+    /**
+     * 
+     * @param quota required frequency to be added to the return array (2=pair, 3=trio, 4=quad)
+     * @param orBetter determines if Cards with more than the quota are also added
+     * @returns an array of Cards that meet the quota
+     */
+    getMultiples(quota: number=2, orBetter: boolean=false): Card[] {
+        const repeatCards: Card[][] = [];
+        let cardPairs: Card[] = [];
+
+        this._cards.forEach(card => {
+            if (repeatCards[card.getPips()] === undefined) { repeatCards[card.getPips()] = []; }
+            repeatCards[card.getPips()].push(card);
+        });
+
+        repeatCards.forEach(repeatCard => {
+            if (repeatCard.length === quota) { cardPairs = cardPairs.concat([...repeatCard]); }
+            else if (orBetter && repeatCard.length > quota) { cardPairs = cardPairs.concat([...repeatCard]); }
+        });
+
+        return cardPairs;
     }
 
     getSelectedCards(): Card[] {

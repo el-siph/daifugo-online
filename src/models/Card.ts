@@ -10,7 +10,7 @@ export type PlayerCount = 2 | 3 | 4 | 5 | 6 | 7;
 class Card {
     private _imageURI: string;
 
-    constructor(private _suit: Suits, private _pips: number) {
+    constructor(private _suit: Suits, private _pips: number, private _aceIsFourteen: boolean=false, private _twoIsFifteeen: boolean=false) {
         this._imageURI = Card.getImageAsset(_suit, _pips);
     }
 
@@ -81,14 +81,16 @@ class Card {
         return "Undefined";
     }
 
-    getPips(aceIsFourteen: boolean=false, twoIsFifteen: boolean=false) { 
-        if (this._pips === 1 && aceIsFourteen) { return 14; }
-        else if (this._pips === 2 && twoIsFifteen) { return 15; }
+    getPips() { 
+        if (this._pips === 1 && this._aceIsFourteen) { return 14; }
+        else if (this._pips === 2 && this._twoIsFifteeen) { return 15; }
         else { return this._pips; }
     }
 
     get suit() { return this._suit; }
     get imageURI() { return this._imageURI; }
+    get aceEqualsFourteen() { return this._aceIsFourteen; }
+    get twoEqualsFifteen() { return this._twoIsFifteeen; }
 }
 
 
