@@ -72,6 +72,7 @@ function App() {
       setCurrentPile(newPile);
     }
     updateCurrentPlayerDeck(playerDeck);
+    setPassCount(0);
     advancePlayer();
   }
 
