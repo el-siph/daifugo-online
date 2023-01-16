@@ -108,7 +108,7 @@ export class Deck {
  */
 export class PileDeck extends Deck {
     private _topCard?: Card;
-    private _topCardQuantity?: number;
+    private _topCardQuantity: number = 0;
 
     constructor(cards: Card[]=[]) { 
         super(cards); 
@@ -116,6 +116,15 @@ export class PileDeck extends Deck {
     }
 
     peekTopCard(): Card | undefined { return this._topCard; }
+
+    peekTopCards(): Card[] { 
+        const topCards: Card[] = [];
+        for (let i=this._cards.length-1; i>this._cards.length-this._topCardQuantity-1; i--) {
+            topCards.push(this._cards[i]);
+        }
+        return topCards;
+    }
+
     peekTopCardQuantityTuple(): [Card, number] | undefined { 
         if (this._topCard && this._topCardQuantity) {
             return [this._topCard, this._topCardQuantity];
@@ -130,7 +139,7 @@ export class PileDeck extends Deck {
             this._topCard = newCards; 
             this._topCardQuantity = 1;
         } else {
-            this._cards.concat([...newCards]);
+            this._cards = this._cards.concat([...newCards]);
             this._topCard = newCards[newCards.length-1];
             this._topCardQuantity = newCards.length;
         }
@@ -181,7 +190,7 @@ export class PlayerDeck extends Deck {
     } 
 
     takeSelectedCards(): Card[] {
-        const takenCards = this._selectedCards;
+        const takenCards = [...this._selectedCards];
         this._cards = this._cards.filter(c => !takenCards.includes(c));
         this._selectedCards = [];
         return takenCards;
