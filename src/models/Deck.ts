@@ -115,6 +115,12 @@ export class PileDeck extends Deck {
         this._topCardQuantity = 0;
     }
 
+    clearPile(): void { 
+        this._cards = []; 
+        this._topCard = undefined;
+        this._topCardQuantity = 0;
+    }
+
     peekTopCard(): Card | undefined { return this._topCard; }
 
     peekTopCards(): Card[] { 

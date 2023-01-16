@@ -7,6 +7,7 @@ import { Deck, PileDeck, PlayerDeck } from './models/Deck';
 const ACE_IS_FOURTEEN = true;
 const TWO_IS_FIFTEEN = true;
 const DEFAULT_PLAYER_COUNT = 4;
+const TERMINATE_PILE_PIPS = 8;
 
 function App() {
 
@@ -64,16 +65,19 @@ function App() {
   }
 
   const handleTossSelectedIntoPile = (): void => {
-    const newPile = new PileDeck(currentPile.cards);
+    let newPile = new PileDeck(currentPile.cards);
     const playerDeck = playerDecks[currentPlayerID-1];
     const selectedCards = playerDeck.takeSelectedCards();
+    
     if (selectedCards.length > 0) {
       newPile.addCards(selectedCards);
+      if (selectedCards[0].getPips() === TERMINATE_PILE_PIPS) { newPile.clearPile(); } 
+      else { advancePlayer(); }
       setCurrentPile(newPile);
     }
+    
     updateCurrentPlayerDeck(playerDeck);
     setPassCount(0);
-    advancePlayer();
   }
 
   const advancePlayer = (): void => {
