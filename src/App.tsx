@@ -8,6 +8,7 @@ const ACE_IS_FOURTEEN = true;
 const TWO_IS_FIFTEEN = true;
 const DEFAULT_PLAYER_COUNT = 4;
 const TERMINATE_PILE_PIPS = 8;
+const ENABLE_REVOLUTIONS = true;
 
 function App() {
 
@@ -20,6 +21,7 @@ function App() {
   const [victoryOrder, setVictoryOrder] = useState<number[]>([]);
   const [playersRemaining, setPlayersRemaining] = useState<number[]>([]);
   const [isRoundEnded, setIsRoundEnded] = useState<boolean>(false);
+  const [isRevolting, setIsRevolting] = useState<boolean>(false);
 
   useEffect(() => {
     prepareDeck();
@@ -83,6 +85,11 @@ function App() {
     
     // if: Player is adding one or more Cards, then: check for conditions before advancing to next Player
     if (selectedCards.length > 0) {
+
+      if (ENABLE_REVOLUTIONS && selectedCards.length === 4) {
+        setIsRevolting(!isRevolting);
+      }
+
       newPile.addCards(selectedCards);
       if (selectedCards[0].getPips() === TERMINATE_PILE_PIPS) { newPile.clearPile(); } 
       // if: Player's deck is exhausted, then: add ID to winner stack
@@ -139,9 +146,17 @@ function App() {
   }
 
   const isCardSelectable = (card: Card): boolean => {
+
     const playerDeck = playerDecks[currentPlayerID-1];
 
     // Heurstic filters
+    // if: top quantity is active, then: all Card groups lower than the quantity are never enabled
+    if (currentPile.peekTopQuantity() > 1) {
+      const availableMultiples = playerDeck.getMultiples(currentPile.peekTopQuantity(), true);
+      if (!availableMultiples.includes(card)) {
+        return false;
+      }
+    }
 
     // if: current PileDeck hasn't been started: then: Card is always enabled
     if (currentPile.getCardCount() < 1 && playerDeck.getSelectedCards().length < 1) {
@@ -150,15 +165,8 @@ function App() {
 
     // if: top card Pips is higher than Card, then: Card is never enabled
     if (currentPile.peekTopPips() >= card.getPips()) {
+      if (isRevolting) { return currentPile.peekTopPips() > card.getPips(); }
       return false;
-    }
-
-    // if: top quantity is active, then: all Card groups lower than the quantity are never enabled
-    if (currentPile.peekTopQuantity() > 1) {
-      const availableMultiples = playerDeck.getMultiples(currentPile.peekTopQuantity(), true);
-      if (!availableMultiples.includes(card)) {
-        return false;
-      }
     }
 
     // if: Card was already selected, then: Card will always be de-selectable
@@ -170,12 +178,13 @@ function App() {
 
     // if: Player has no selected Cards, then: just compare Pips
     if (playerDeck.getSelectedCards().length < 1) {
-      return currentPile.peekTopPips() < card.getPips();
+      const result = isRevolting ? currentPile.peekTopPips() > card.getPips() : currentPile.peekTopPips() < card.getPips();
+      return result;
     // else if: Player has selected one or more Cards
     } else {
       // if: current PileDeck hasn't been started, then: return whether the Card has an equal number of Pips
       if (currentPile.getCardCount() < 1) {
-        return playerDeck.getLastSelectedCard()?.getPips() === card.getPips();
+       return playerDeck.getLastSelectedCard()?.getPips() === card.getPips();
       // else: return whether the quantity quota has been met and the Card has the same Pips as the other selections
       } else {
         return playerDeck.getSelectedCards().length < currentPile.peekTopQuantity() && playerDeck.getLastSelectedCard().getPips() === card.getPips();
@@ -230,6 +239,7 @@ function App() {
       </section>
 
       { !isRoundEnded && <section className='play-area'>
+        { isRevolting && <h1>Revolution!</h1> }
         {pileDisplay}
         { currentPlayerDeck !== undefined && <h1>Player {currentPlayerDeck.playerID}, {currentPlayerDeck.getCardCount()} cards</h1> }
         {deckDisplay}
