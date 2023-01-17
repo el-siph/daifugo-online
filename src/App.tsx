@@ -25,7 +25,6 @@ function App() {
 
   useEffect(() => {
     prepareDeck();
-    setCurrentPlayerID(1);
   },[]);
 
   useEffect(() => {
@@ -47,6 +46,7 @@ function App() {
       deck.sortCards(ACE_IS_FOURTEEN, TWO_IS_FIFTEEN); 
       newPlayersRemaining.push(deck.playerID);
     });
+    determineFirstPlayer(playerDecks);
     setPlayerDecks(playerDecks);
     setPlayersRemaining(newPlayersRemaining);
   }
@@ -56,6 +56,12 @@ function App() {
     newPlayerDecks[currentPlayerID-1] = updatedDeck;
     setPlayerDecks(newPlayerDecks);
   } 
+
+  const determineFirstPlayer = (playerDecks: PlayerDeck[]): void => {
+    playerDecks.forEach(deck => {
+      if (deck.hasThreeOfDiamonds()) { setCurrentPlayerID(deck.playerID); }
+    });
+  }
 
   const handleShuffleDeck = (): void => {
     if (deck !== null) {
@@ -197,7 +203,7 @@ function App() {
   // Render Components
   const deckDisplay = (!currentPlayerDeck || deck.getCardCount() < 1) ? <h1>One Moment...</h1> : <div className='card-containers'>
       <div className='player-hand'>
-        { currentPlayerDeck.playerID === currentPlayerID && currentPlayerDeck.cards.map(card => {
+        { currentPlayerDeck.cards.map(card => {
           const playerDeck = playerDecks[currentPlayerID-1];
           return <CardComponent 
             key={`card-${card.suit}${card.getPips()}`} 

@@ -230,6 +230,17 @@ export class PlayerDeck extends Deck {
         return this._selectedCards.includes(card);
     } 
 
+    hasThreeOfDiamonds(): boolean {
+        let retval = false;
+        this._cards.forEach(card => {
+            if (card.getPips() === 3 && card.suit === Suits.Diamonds) {
+                console.log(`card.pips ${card.getPips()}, card.suit ${card.suit}, deck ${this.playerID}`);
+                retval = true;
+            }
+        });
+        return retval;
+    }
+
     takeSelectedCards(): Card[] {
         const takenCards = [...this._selectedCards];
         this._cards = this._cards.filter(c => !takenCards.includes(c));
